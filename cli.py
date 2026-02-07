@@ -111,6 +111,22 @@ def do_config():
     print("\n.env sauvegardé.")
 
 
+def do_kill_all():
+    pid = read_pid()
+    if pid:
+        os.kill(pid, signal.SIGTERM)
+        os.remove(PID_FILE)
+        print("Bot arrêté.")
+    else:
+        print("Bot déjà inactif.")
+    ret = subprocess.run("tmux has-session -t claude", shell=True, capture_output=True)
+    if ret.returncode == 0:
+        subprocess.run("tmux kill-session -t claude", shell=True, capture_output=True)
+        print("Session tmux fermée.")
+    else:
+        print("Aucune session tmux active.")
+
+
 def do_install():
     print("Installation des dépendances...")
     if not os.path.exists(os.path.join(DIR, "venv")):
@@ -125,6 +141,24 @@ def do_install():
 
 # --- Menu interactif ---
 
+C = "\033[36m"    # cyan
+D = "\033[2m"     # dim
+R = "\033[0m"     # reset
+
+BANNER = f"""\
+{C}
+  ████████╗███████╗██╗     ███████╗██████╗  ██████╗ ████████╗
+  ╚══██╔══╝██╔════╝██║     ██╔════╝██╔══██╗██╔═══██╗╚══██╔══╝
+     ██║   █████╗  ██║     █████╗  ██████╔╝██║   ██║   ██║
+     ██║   ██╔══╝  ██║     ██╔══╝  ██╔══██╗██║   ██║   ██║
+     ██║   ███████╗███████╗███████╗██████╔╝╚██████╔╝   ██║
+     ╚═╝   ╚══════╝╚══════╝╚══════╝╚═════╝  ╚═════╝    ╚═╝
+{D}              Telegram Bot — Claude Code{R}
+"""
+
+SEP = f"{D}  {'─' * 50}{R}"
+
+
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -132,37 +166,50 @@ def clear():
 def interactive_menu():
     while True:
         clear()
-        print(f"\n  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}\n")
+        bot_running = read_pid() is not None
+        print(BANNER)
+        print(f"  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}")
+        print(SEP)
 
-        items = [
-            "▶  Démarrer le bot",
-            "■  Arrêter le bot",
-            "↻  Redémarrer le bot",
+        items = []
+        actions = []
+
+        if bot_running:
+            items += ["■  Arrêter le bot", "↻  Redémarrer le bot"]
+            actions += [do_stop, do_restart]
+        else:
+            items += ["▶  Démarrer le bot"]
+            actions += [do_start]
+
+        items += [
+            "⏻  Tout couper (bot + session tmux)",
             "ℹ  Statut",
             "📋 Voir les logs",
             "⚙  Configurer (token / user ID)",
             "📦 Installer les dépendances",
             "✖  Quitter",
         ]
+        actions += [do_kill_all, do_status, do_logs, do_config, do_install, None]
 
         menu = TerminalMenu(
             items,
-            title="Bot Telegram Claude Code",
+            menu_cursor="❯ ",
             menu_cursor_style=("fg_cyan", "bold"),
             menu_highlight_style=("fg_cyan", "bold"),
         )
 
         choice = menu.show()
 
-        if choice is None or choice == 7:
+        if choice is None or actions[choice] is None:
             clear()
-            print("Bye.")
+            print(f"{D}  Bye.{R}")
             break
 
         clear()
-        actions = [do_start, do_stop, do_restart, do_status, do_logs, do_config, do_install]
+        print(BANNER)
+        print(SEP + "\n")
         actions[choice]()
-        input("\n⏎  Entrée pour continuer...")
+        input(f"\n{D}  ⏎  Entrée pour continuer...{R}")
 
 
 # --- CLI direct ---
@@ -184,6 +231,7 @@ def main():
     p_logs = sub.add_parser("logs", help="Voir les logs")
     p_logs.add_argument("-n", "--lines", type=int, default=30)
 
+    sub.add_parser("kill", help="Tout couper (bot + session tmux)")
     sub.add_parser("config", help="Configurer token et user ID")
     sub.add_parser("install", help="Installer les dépendances")
 
@@ -199,6 +247,7 @@ def main():
         "restart": do_restart,
         "status": do_status,
         "logs": lambda: do_logs(args.lines),
+        "kill": do_kill_all,
         "config": do_config,
         "install": do_install,
     }
