@@ -4,6 +4,21 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.3.0] - 2026-02-07
+
+### Fixed
+- Dialogues de permission (Write/Edit/Bash) non envoyés sur Telegram (polling adaptatif + `_has_pending_tool`)
+- Crash "Message is too long" sur les dialogues avec preview de fichier (utilisation de `send_chunks`)
+- Réponses tronquées quand Claude utilise des séparateurs `────` dans son contenu (`_is_separator` colonne 0 uniquement)
+- Crash `TimedOut` sur `send_action` qui cassait la boucle de surveillance
+
+### Added
+- Indicateur "typing" sur Telegram pendant que Claude travaille
+- Fonction `_has_pending_tool()` pour détecter les outils en attente de confirmation
+
+### Changed
+- Boucle `auto_read` infinie avec idle timeout (30s d'inactivité) au lieu du timeout fixe 120s
+
 ## [1.2.0] - 2026-02-07
 
 ### Added

@@ -5,6 +5,7 @@ import subprocess
 
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
+from telegram.constants import ChatAction
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -70,7 +71,9 @@ def session_exists() -> bool:
 
 
 def _is_separator(line: str) -> bool:
-    """Détecte un séparateur ──── (au moins 10 caractères ─)."""
+    """Détecte un séparateur ──── en colonne 0 (pas indenté)."""
+    if line and line[0] != "─":
+        return False
     s = line.strip()
     return len(s) > 10 and all(c == "─" for c in s)
 
@@ -273,6 +276,34 @@ def is_claude_done(output: str) -> bool:
     return has_response
 
 
+_DIALOG_TOOLS = ("Write", "Edit", "Bash", "NotebookEdit")
+
+
+def _has_pending_tool(output: str) -> bool:
+    """Détecte si la réponse se termine par un outil qui attend une confirmation."""
+    lines = output.splitlines()
+    start, end = _find_response_zone(lines)
+    if start >= end:
+        return False
+    # Scanner depuis la fin de la zone de réponse
+    for i in range(end - 1, start - 1, -1):
+        stripped = lines[i].strip()
+        if not stripped:
+            continue
+        # Tool output ⎿ → le tool a déjà été exécuté, pas de dialogue
+        if stripped.startswith("⎿"):
+            return False
+        # Tool header → dialogue probablement en attente
+        for kw in _DIALOG_TOOLS:
+            if stripped.startswith(kw) and len(stripped) > len(kw):
+                next_char = stripped[len(kw)]
+                if next_char in ("(", " ", ":", "/"):
+                    return True
+        # Autre contenu → pas un tool en attente
+        return False
+    return False
+
+
 def compute_diff(old: str, new: str) -> str:
     """Calcule la partie nouvelle de new par rapport à old."""
     if not old:
@@ -339,9 +370,14 @@ async def auto_read(update: Update):
     global _last_response, _last_text
     await asyncio.sleep(1)
     sent_any = False
-    stable_count = 0
     previous_raw = ""
-    for _ in range(120):
+    max_idle = 30  # Timeout seulement après 30s d'inactivité
+    idle_count = 0
+    while True:
+        try:
+            await update.message.chat.send_action(ChatAction.TYPING)
+        except Exception:
+            pass  # Ignorer les erreurs réseau sur l'indicateur typing
         output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
         # Mettre à jour la réponse complète (pour le tracking interne)
         response = extract_response(output)
@@ -358,54 +394,52 @@ async def auto_read(update: Update):
         # Dialogue interactif (permission, confirmation…) → envoyer et sortir
         dialog = extract_dialog(output)
         if dialog:
-            await update.message.reply_text(
-                f"<pre>{html.escape(dialog)}</pre>", parse_mode="HTML"
-            )
+            await send_chunks(update, dialog)
             return
-        # Claude a fini ? Double-check après 1s pour éviter les faux positifs
+        # Claude a fini ? Polling adaptatif pour attendre un éventuel dialogue
         if is_claude_done(output):
-            await asyncio.sleep(1)
-            output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
-            if not is_claude_done(output):
-                continue  # Faux positif, Claude travaille encore
-            # Vérifier si un dialogue est apparu pendant le délai
-            dialog = extract_dialog(output)
-            if dialog:
+            max_checks = 5 if _has_pending_tool(output) else 2
+            for _check in range(max_checks):
+                await asyncio.sleep(1)
+                output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
+                if not is_claude_done(output):
+                    break  # Faux positif, Claude travaille encore
+                dialog = extract_dialog(output)
+                if dialog:
+                    _last_response = extract_response(output) or _last_response
+                    final_text = extract_claude_text(output)
+                    if final_text and final_text != _last_text:
+                        diff = compute_diff(_last_text, final_text)
+                        if diff:
+                            await send_chunks(update, diff)
+                        _last_text = final_text
+                    await send_chunks(update, dialog)
+                    return
+            else:
+                # Polling terminé sans dialogue → Claude est vraiment fini
                 _last_response = extract_response(output) or _last_response
                 final_text = extract_claude_text(output)
                 if final_text and final_text != _last_text:
                     diff = compute_diff(_last_text, final_text)
                     if diff:
                         await send_chunks(update, diff)
+                        sent_any = True
                     _last_text = final_text
-                await update.message.reply_text(
-                    f"<pre>{html.escape(dialog)}</pre>", parse_mode="HTML"
-                )
+                if not sent_any:
+                    await update.message.reply_text("(aucun changement)")
                 return
-            _last_response = extract_response(output) or _last_response
-            final_text = extract_claude_text(output)
-            if final_text and final_text != _last_text:
-                diff = compute_diff(_last_text, final_text)
-                if diff:
-                    await send_chunks(update, diff)
-                    sent_any = True
-                _last_text = final_text
-            if not sent_any:
-                await update.message.reply_text("(aucun changement)")
-            return
-        # Fallback stabilité : 5× identique sans prompt → sortir
+            continue  # Faux positif (break) → reprendre la boucle principale
+        # Compteur d'inactivité : reset si le terminal change
         if output == previous_raw:
-            stable_count += 1
-            if stable_count >= 5:
+            idle_count += 1
+            if idle_count >= max_idle:
                 if not sent_any:
                     await update.message.reply_text("(aucun changement)")
                 return
         else:
-            stable_count = 0
+            idle_count = 0
             previous_raw = output
         await asyncio.sleep(1)
-    if not sent_any:
-        await update.message.reply_text("(timeout)")
 
 
 @auth
