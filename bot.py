@@ -2,24 +2,56 @@ import asyncio
 import html
 import os
 import subprocess
+
 from dotenv import load_dotenv
 from telegram import BotCommand, Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 load_dotenv()
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID", "0"))
 SESSION_NAME = "claude"
 _last_response = ""  # Dernière réponse extraite, pour éviter les doublons
+_last_text = ""  # Dernier texte filtré envoyé à Telegram
+
+# Mots-clés d'outils Claude Code pour filtrer le tool output
+_TOOL_KEYWORDS = (
+    "Read",
+    "Write",
+    "Edit",
+    "Bash",
+    "Glob",
+    "Grep",
+    "WebFetch",
+    "WebSearch",
+    "Task",
+    "TodoWrite",
+    "NotebookEdit",
+    "Skill",
+    "EnterPlanMode",
+    "ExitPlanMode",
+    "Wrote",
+    "Created",
+    "Updated",
+)
 
 
 def auth(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not update.message or not update.effective_user:
+            return
         if update.effective_user.id != ALLOWED_USER_ID:
             await update.message.reply_text("Non autorisé.")
             return
         return await func(update, context)
+
     return wrapper
 
 
@@ -29,9 +61,12 @@ def run(cmd: str) -> str:
 
 
 def session_exists() -> bool:
-    return subprocess.run(
-        f"tmux has-session -t {SESSION_NAME}", shell=True, capture_output=True
-    ).returncode == 0
+    return (
+        subprocess.run(
+            f"tmux has-session -t {SESSION_NAME}", shell=True, capture_output=True
+        ).returncode
+        == 0
+    )
 
 
 def _is_separator(line: str) -> bool:
@@ -116,6 +151,63 @@ def extract_response(capture: str) -> str:
     return "\n".join(response_lines).strip()
 
 
+def _is_tool_header(line: str) -> bool:
+    """Détecte une ligne d'invocation d'outil (ex: '  Write(~/Desktop/file.html)')."""
+    s = line.strip()
+    # Forme "Tool(args)" ou "Tool mot..."
+    for kw in _TOOL_KEYWORDS:
+        if s.startswith(kw) and len(s) > len(kw):
+            next_char = s[len(kw)]
+            if next_char in ("(", " ", ":", "/"):
+                return True
+    return False
+
+
+def extract_claude_text(capture: str) -> str:
+    """Extrait uniquement le texte de Claude, sans le tool output ni les blocs de code."""
+    lines = capture.splitlines()
+    if not lines:
+        return ""
+    start, end = _find_response_zone(lines)
+    if start >= end:
+        return ""
+    text_lines = []
+    in_claude_text = False
+    in_tool = False
+    for line in lines[start:end]:
+        stripped = line.strip()
+        if not stripped:
+            if in_claude_text and not in_tool:
+                text_lines.append("")
+            continue
+        # Marqueur de réponse Claude ⏺
+        if stripped.startswith(("⏺", "●")):
+            in_claude_text = True
+            in_tool = False
+            text = stripped[1:].strip()
+            if text:
+                text_lines.append(text)
+            continue
+        if not in_claude_text:
+            continue
+        # Tool output ⎿ → ignorer
+        if stripped.startswith("⎿"):
+            in_tool = True
+            continue
+        # Ligne indentée
+        if line.startswith("  "):
+            if in_tool:
+                continue  # Continuation de tool output → ignorer
+            if _is_tool_header(line):
+                in_tool = True
+                continue  # Header d'outil → ignorer
+            # Continuation de texte Claude (liste, paragraphe indenté…)
+            text_lines.append(stripped)
+            continue
+        # Ignorer le reste (spinners, timing ✻…)
+    return "\n".join(text_lines).strip()
+
+
 def extract_dialog(capture: str) -> str:
     """Extrait un dialogue interactif (permission, AskUserQuestion, trust prompt…).
 
@@ -188,7 +280,7 @@ def compute_diff(old: str, new: str) -> str:
     if new == old:
         return ""
     if new.startswith(old):
-        return new[len(old):].strip()
+        return new[len(old) :].strip()
     # Recherche par lignes : trouver où le contenu déjà envoyé se termine dans new
     old_lines = old.splitlines()
     new_lines = new.splitlines()
@@ -214,13 +306,14 @@ def compute_diff(old: str, new: str) -> str:
                 else:
                     break
             if match_count >= min(2, trim_at):
-                after = new_lines[i + 1:]
+                after = new_lines[i + 1 :]
                 return "\n".join(after).strip() if after else ""
     return new
 
 
 async def send_chunks(update: Update, text: str):
     """Envoie un texte, découpé en plusieurs messages si nécessaire."""
+    assert update.message
     lines = text.splitlines()
     chunks = []
     current = []
@@ -241,22 +334,27 @@ async def send_chunks(update: Update, text: str):
 
 
 async def auto_read(update: Update):
-    """Surveille le terminal et envoie les diffs au fur et à mesure que Claude répond."""
-    global _last_response
+    """Surveille le terminal et envoie le texte de Claude au fil de l'eau (sans tool output)."""
+    assert update.message
+    global _last_response, _last_text
     await asyncio.sleep(1)
     sent_any = False
     stable_count = 0
     previous_raw = ""
     for _ in range(120):
         output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
+        # Mettre à jour la réponse complète (pour le tracking interne)
         response = extract_response(output)
-        # Envoyer le diff si nouveau contenu détecté
-        if response and response != _last_response:
-            diff = compute_diff(_last_response, response)
+        if response:
+            _last_response = response
+        # Envoyer le texte filtré (sans tool output) au fil de l'eau
+        text = extract_claude_text(output)
+        if text and text != _last_text:
+            diff = compute_diff(_last_text, text)
             if diff:
                 await send_chunks(update, diff)
                 sent_any = True
-            _last_response = response
+            _last_text = text
         # Dialogue interactif (permission, confirmation…) → envoyer et sortir
         dialog = extract_dialog(output)
         if dialog:
@@ -273,23 +371,25 @@ async def auto_read(update: Update):
             # Vérifier si un dialogue est apparu pendant le délai
             dialog = extract_dialog(output)
             if dialog:
-                final = extract_response(output)
-                if final and final != _last_response:
-                    diff = compute_diff(_last_response, final)
+                _last_response = extract_response(output) or _last_response
+                final_text = extract_claude_text(output)
+                if final_text and final_text != _last_text:
+                    diff = compute_diff(_last_text, final_text)
                     if diff:
                         await send_chunks(update, diff)
-                    _last_response = final
+                    _last_text = final_text
                 await update.message.reply_text(
                     f"<pre>{html.escape(dialog)}</pre>", parse_mode="HTML"
                 )
                 return
-            final = extract_response(output)
-            if final and final != _last_response:
-                diff = compute_diff(_last_response, final)
+            _last_response = extract_response(output) or _last_response
+            final_text = extract_claude_text(output)
+            if final_text and final_text != _last_text:
+                diff = compute_diff(_last_text, final_text)
                 if diff:
                     await send_chunks(update, diff)
                     sent_any = True
-                _last_response = final
+                _last_text = final_text
             if not sent_any:
                 await update.message.reply_text("(aucun changement)")
             return
@@ -310,6 +410,7 @@ async def auto_read(update: Update):
 
 @auth
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    assert update.message
     await update.message.reply_text(
         "Bot Claude Code prêt.\n\n"
         "/open — Ouvrir une session\n"
@@ -323,6 +424,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @auth
 async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    assert update.message
     if session_exists():
         await update.message.reply_text("Session déjà active.")
         return
@@ -330,27 +432,29 @@ async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     run(f"tmux send-keys -t {SESSION_NAME} -l claude")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await update.message.reply_text("Session Claude Code ouverte.")
-    await auto_read(update)
 
 
 @auth
 async def close_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    assert update.message
     if not session_exists():
         await update.message.reply_text("Aucune session active.")
         return
-    global _last_response
+    global _last_response, _last_text
     run(f"tmux kill-session -t {SESSION_NAME}")
     _last_response = ""
+    _last_text = ""
     await update.message.reply_text("Session fermée.")
 
 
 @auth
 async def plain_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Les messages sans commande sont envoyés directement à la session Claude."""
+    assert update.message
     if not session_exists():
         await update.message.reply_text("Aucune session active. /open d'abord.")
         return
-    msg = update.message.text
+    msg = update.message.text or ""
     run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([msg])}")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await auto_read(update)
@@ -358,19 +462,23 @@ async def plain_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def make_key_handler(key: str):
     """Factory pour créer un handler qui envoie une touche tmux."""
+
     @auth
     async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        assert update.message
         if not session_exists():
             await update.message.reply_text("Aucune session active. /open d'abord.")
             return
         run(f"tmux send-keys -t {SESSION_NAME} {key}")
         await auto_read(update)
+
     return handler
 
 
 @auth
 async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sélectionne l'option N dans un menu interactif (N flèches bas + Enter)."""
+    assert update.message
     if not session_exists():
         await update.message.reply_text("Aucune session active. /open d'abord.")
         return
@@ -385,14 +493,16 @@ async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def post_init(application):
-    await application.bot.set_my_commands([
-        BotCommand("open", "Ouvrir une session"),
-        BotCommand("close", "Fermer la session"),
-        BotCommand("y", "Confirmer (Yes)"),
-        BotCommand("n", "Refuser (No)"),
-        BotCommand("esc", "Annuler (Escape)"),
-        BotCommand("pick", "Choisir l'option N"),
-    ])
+    await application.bot.set_my_commands(
+        [
+            BotCommand("open", "Ouvrir une session"),
+            BotCommand("close", "Fermer la session"),
+            BotCommand("y", "Confirmer (Yes)"),
+            BotCommand("n", "Refuser (No)"),
+            BotCommand("esc", "Annuler (Escape)"),
+            BotCommand("pick", "Choisir l'option N"),
+        ]
+    )
 
 
 def main():

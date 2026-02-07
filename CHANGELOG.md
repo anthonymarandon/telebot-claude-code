@@ -4,6 +4,16 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.2.0] - 2026-02-07
+
+### Added
+- Streaming filtré : envoi du texte de Claude au fil de l'eau, sans tool output ni blocs de code
+- Fonction `extract_claude_text` avec machine à états pour séparer texte et outils
+
+### Changed
+- `/open` n'appelle plus `auto_read` (supprime le faux message "aucun changement" au démarrage)
+- Corrections Pylance : guards de typage sur `update.message`, `update.effective_user`, `menu.show()`
+
 ## [1.1.0] - 2025-02-07
 
 ### Added

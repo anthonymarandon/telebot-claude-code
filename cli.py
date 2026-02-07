@@ -19,6 +19,7 @@ BOT_SCRIPT = os.path.join(DIR, "bot.py")
 
 # --- Helpers ---
 
+
 def get_python():
     if os.path.exists(VENV_PYTHON):
         return VENV_PYTHON
@@ -45,10 +46,15 @@ def bot_status_label():
 
 def tmux_status_label():
     ret = subprocess.run("tmux has-session -t claude", shell=True, capture_output=True)
-    return "\033[32m● active\033[0m" if ret.returncode == 0 else "\033[31m○ inactive\033[0m"
+    return (
+        "\033[32m● active\033[0m"
+        if ret.returncode == 0
+        else "\033[31m○ inactive\033[0m"
+    )
 
 
 # --- Actions ---
+
 
 def do_start(foreground=False):
     if read_pid():
@@ -66,7 +72,8 @@ def do_start(foreground=False):
         log = open(LOG_FILE, "a")
         proc = subprocess.Popen(
             [get_python(), BOT_SCRIPT],
-            stdout=log, stderr=log,
+            stdout=log,
+            stderr=log,
             start_new_session=True,
         )
         with open(PID_FILE, "w") as f:
@@ -130,10 +137,20 @@ def do_kill_all():
 def do_install():
     print("Installation des dépendances...")
     if not os.path.exists(os.path.join(DIR, "venv")):
-        subprocess.run([sys.executable, "-m", "venv", os.path.join(DIR, "venv")], check=True)
+        subprocess.run(
+            [sys.executable, "-m", "venv", os.path.join(DIR, "venv")], check=True
+        )
         print("Environnement virtuel créé.")
     subprocess.run(
-        [get_python(), "-m", "pip", "install", "-q", "-r", os.path.join(DIR, "requirements.txt")],
+        [
+            get_python(),
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "-r",
+            os.path.join(DIR, "requirements.txt"),
+        ],
         check=True,
     )
     print("Dépendances installées.")
@@ -141,9 +158,9 @@ def do_install():
 
 # --- Menu interactif ---
 
-C = "\033[36m"    # cyan
-D = "\033[2m"     # dim
-R = "\033[0m"     # reset
+C = "\033[36m"  # cyan
+D = "\033[2m"  # dim
+R = "\033[0m"  # reset
 
 BANNER = f"""\
 {C}
@@ -200,7 +217,7 @@ def interactive_menu():
 
         choice = menu.show()
 
-        if choice is None or actions[choice] is None:
+        if choice is None or not isinstance(choice, int) or actions[choice] is None:
             clear()
             print(f"{D}  Bye.{R}")
             break
@@ -213,6 +230,7 @@ def interactive_menu():
 
 
 # --- CLI direct ---
+
 
 def main():
     parser = argparse.ArgumentParser(
