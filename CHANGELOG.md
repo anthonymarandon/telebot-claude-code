@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.5.2] - 2026-02-07
+
+### Changed
+- Confirmation de mise à jour remplacée par un menu interactif (flèches directionnelles) au lieu de `[O/n]`
+
 ## [1.5.1] - 2026-02-07
 
 ### Added

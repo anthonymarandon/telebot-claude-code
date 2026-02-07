@@ -214,8 +214,15 @@ def do_update():
     local_tag, remote_tag = result
     print(f"  Version actuelle : {local_tag}")
     print(f"  Nouvelle version : \033[32m{remote_tag}\033[0m\n")
-    answer = input("Mettre à jour ? [O/n] ").strip().lower()
-    if answer and answer not in ("o", "oui", "y", "yes"):
+    menu = TerminalMenu(
+        ["Oui, mettre à jour", "Non, annuler"],
+        title="  Mettre à jour ?",
+        menu_cursor="❯ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_cyan", "bold"),
+    )
+    choice = menu.show()
+    if choice != 0:
         print("Mise à jour annulée.")
         return
 
