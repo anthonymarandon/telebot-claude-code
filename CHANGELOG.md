@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.4.2] - 2026-02-07
+
+### Fixed
+- URL du repo GitHub corrigée dans `install.sh` et `README.md` (`telebot-claude-code` au lieu de `telegram-bot`)
+
 ## [1.4.1] - 2026-02-07
 
 ### Added

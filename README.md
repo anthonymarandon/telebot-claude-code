@@ -5,7 +5,7 @@ Pilotez [Claude Code](https://docs.anthropic.com/en/docs/claude-code) à distanc
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/anthonymarandon/telegram-bot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/anthonymarandon/telebot-claude-code/main/install.sh | bash
 ```
 
 Le script installe tout dans `~/.telebot/` et crée la commande `telebot`.

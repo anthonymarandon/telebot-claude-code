@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # --- Configuration ---
-REPO="https://github.com/anthonymarandon/telegram-bot.git"
+REPO="https://github.com/anthonymarandon/telebot-claude-code.git"
 INSTALL_DIR="$HOME/.telebot"
 BIN_DIR="$HOME/.local/bin"
 BIN_NAME="telebot"
