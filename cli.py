@@ -7,6 +7,7 @@ import re
 import signal
 import subprocess
 import sys
+import time
 
 from simple_term_menu import TerminalMenu
 
@@ -302,13 +303,24 @@ def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
 
+def animate_banner():
+    for line in BANNER.splitlines():
+        print(line)
+        time.sleep(0.04)
+
+
 def interactive_menu():
     update_info = check_update()
+    first_display = True
 
     while True:
         clear()
         bot_running = read_pid() is not None
-        print(BANNER)
+        if first_display:
+            animate_banner()
+            first_display = False
+        else:
+            print(BANNER)
         print(f"{D}              {get_version()}{R}")
         print(f"\n  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}")
         if update_info:

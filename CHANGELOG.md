@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.5.4] - 2026-02-07
+
+### Added
+- Animation d'apparition du banner ligne par ligne au premier lancement du menu interactif
+
 ## [1.5.3] - 2026-02-07
 
 ### Changed
