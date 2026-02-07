@@ -4,6 +4,17 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.5.0] - 2026-02-07
+
+### Added
+- Règle de priorité dans CLAUDE.md : Claude lit et priorise le contexte du projet cible avant d'appliquer les règles par défaut
+- Skill `/analyze` : analyse un projet (structure, langage, frameworks, conventions, contexte .claude/)
+- Skill `/init-context` : initialise un `.claude/` adapté dans n'importe quel projet avec CLAUDE.md et skills pré-remplis
+
+### Changed
+- CLAUDE.md rendu polyvalent et générique (plus spécifique à Python, s'adapte au projet cible)
+- Le `.claude/` est désormais conservé à l'installation (plus supprimé par install.sh)
+
 ## [1.4.3] - 2026-02-07
 
 ### Fixed

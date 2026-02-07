@@ -1,10 +1,21 @@
-# Claude — Référentiel Projet
+# Claude — Référentiel Telebot
 
-Ce fichier est l'orchestrateur central du projet. Il référence toutes les règles, commandes et skills disponibles.
+Ce fichier est l'orchestrateur central de Telebot. Il fournit des règles par défaut et des skills polyvalents utilisables sur n'importe quel projet.
 
-## Projet
+## Règle de priorité — IMPORTANT
 
-- **Nom** : Telegram Bot Claude Code
+Quand tu travailles sur un projet externe (après un `cd` vers un autre dossier) :
+
+1. **Lis immédiatement** le `.claude/CLAUDE.md` du projet cible s'il existe
+2. **Lis les skills** du projet cible (`.claude/skills/`)
+3. Les règles et conventions du projet cible **priment** sur celles de ce fichier
+4. Si le projet cible n'a pas de `.claude/`, applique les règles par défaut ci-dessous
+
+Cette lecture est **obligatoire** avant toute action sur un projet externe. Ne jamais supposer les conventions d'un projet sans avoir vérifié son contexte.
+
+## Projet Telebot
+
+- **Nom** : Telebot — Telegram Bot Claude Code
 - **Langage** : Python
 - **But** : Piloter Claude Code à distance via Telegram + tmux
 - **Version actuelle** : voir `CHANGELOG.md`
@@ -24,7 +35,11 @@ Ce fichier est l'orchestrateur central du projet. Il référence toutes les règ
     └── skills/
         ├── commit/
         │   └── SKILL.md
-        └── auto-update/
+        ├── auto-update/
+        │   └── SKILL.md
+        ├── analyze/
+        │   └── SKILL.md
+        └── init-context/
             └── SKILL.md
 ```
 
@@ -34,8 +49,12 @@ Ce fichier est l'orchestrateur central du projet. Il référence toutes les règ
 |---|---|---|
 | [commit](.claude/skills/commit/SKILL.md) | `/commit` | Analyse les changements, détermine la version (patch/minor/major), met à jour le CHANGELOG et commit avec tag |
 | [auto-update](.claude/skills/auto-update/SKILL.md) | `/auto-update` | Met à jour les consignes, règles et skills quand un problème est détecté ou une amélioration identifiée |
+| [analyze](.claude/skills/analyze/SKILL.md) | `/analyze` | Analyse un projet pour en comprendre la structure, le langage, les conventions et le contexte |
+| [init-context](.claude/skills/init-context/SKILL.md) | `/init-context` | Initialise un `.claude/` dans le projet courant avec CLAUDE.md et skills adaptés |
 
-## Règles globales
+## Règles par défaut
+
+Ces règles s'appliquent quand le projet cible n'a pas ses propres conventions.
 
 ### Versioning
 - Format : **semver** `MAJOR.MINOR.PATCH`
@@ -52,11 +71,10 @@ Ce fichier est l'orchestrateur central du projet. Il référence toutes les règ
 
 ### Code
 - Garder le code minimal et lisible
-- Python uniquement, pas de sur-ingénierie
-- Les dépendances sont dans le venv, jamais en global
-- Cross-platform : macOS, Linux, Windows
+- Pas de sur-ingénierie
+- S'adapter au langage et aux conventions du projet cible
+- Cross-platform quand possible
 
 ### Sécurité
-- Authentification par `ALLOWED_USER_ID` sur le bot Telegram
 - Aucun secret dans le code source
-- `.env` exclu du versioning
+- `.env` et fichiers sensibles exclus du versioning
