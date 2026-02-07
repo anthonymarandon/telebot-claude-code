@@ -4,6 +4,14 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.4.0] - 2026-02-07
+
+### Added
+- Script d'installation one-liner `install.sh` (clone dans `~/.telebot/`, crée venv, installe deps, crée commande `telebot`)
+- Commande `telebot update` pour mettre à jour depuis GitHub (git pull + réinstall deps + restart bot si actif)
+- Vérification automatique des mises à jour au lancement du menu interactif (notification discrète)
+- Fonctions utilitaires `parse_version()` et `check_update()` pour comparer les tags git locaux/distants
+
 ## [1.3.0] - 2026-02-07
 
 ### Fixed

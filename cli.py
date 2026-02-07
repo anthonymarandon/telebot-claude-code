@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -51,6 +52,54 @@ def tmux_status_label():
         if ret.returncode == 0
         else "\033[31m○ inactive\033[0m"
     )
+
+
+def parse_version(tag):
+    """Convertit 'v1.3.0' en tuple (1, 3, 0) pour comparaison."""
+    return tuple(int(x) for x in tag.lstrip("v").split("."))
+
+
+def check_update(timeout=3):
+    """Vérifie si une MAJ est dispo. Retourne (local, remote) ou None."""
+    try:
+        local = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            cwd=DIR,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if local.returncode != 0:
+            return None
+        local_tag = local.stdout.strip()
+
+        remote = subprocess.run(
+            ["git", "ls-remote", "--tags", "origin"],
+            cwd=DIR,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if remote.returncode != 0:
+            return None
+
+        tags = []
+        for line in remote.stdout.splitlines():
+            if "^{}" in line:
+                continue
+            m = re.search(r"refs/tags/(v[\d.]+)$", line)
+            if m:
+                tags.append(m.group(1))
+
+        if not tags:
+            return None
+
+        latest = max(tags, key=parse_version)
+        if parse_version(latest) > parse_version(local_tag):
+            return (local_tag, latest)
+        return None
+    except Exception:
+        return None
 
 
 # --- Actions ---
@@ -156,6 +205,57 @@ def do_install():
     print("Dépendances installées.")
 
 
+def do_update():
+    print("Vérification des mises à jour...\n")
+    result = check_update(timeout=10)
+    if not result:
+        print("Déjà à jour.")
+        return
+    local_tag, remote_tag = result
+    print(f"  Version actuelle : {local_tag}")
+    print(f"  Nouvelle version : \033[32m{remote_tag}\033[0m\n")
+    answer = input("Mettre à jour ? [O/n] ").strip().lower()
+    if answer and answer not in ("o", "oui", "y", "yes"):
+        print("Mise à jour annulée.")
+        return
+
+    was_running = read_pid() is not None
+    if was_running:
+        print("\nArrêt du bot avant mise à jour...")
+        do_stop()
+
+    print("Téléchargement...")
+    ret = subprocess.run(
+        ["git", "pull", "--ff-only"],
+        cwd=DIR,
+        capture_output=True,
+        text=True,
+    )
+    if ret.returncode != 0:
+        print(f"\033[31mErreur git pull :\033[0m\n{ret.stderr}")
+        return
+
+    print("Mise à jour des dépendances...")
+    subprocess.run(
+        [
+            get_python(),
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "-r",
+            os.path.join(DIR, "requirements.txt"),
+        ],
+        cwd=DIR,
+    )
+
+    print(f"\n\033[32mMis à jour vers {remote_tag}.\033[0m")
+
+    if was_running:
+        print("Redémarrage du bot...")
+        do_start()
+
+
 # --- Menu interactif ---
 
 C = "\033[36m"  # cyan
@@ -181,11 +281,15 @@ def clear():
 
 
 def interactive_menu():
+    update_info = check_update()
+
     while True:
         clear()
         bot_running = read_pid() is not None
         print(BANNER)
         print(f"  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}")
+        if update_info:
+            print(f"  {D}{C}Mise à jour disponible : {update_info[1]}{R}")
         print(SEP)
 
         items = []
@@ -204,9 +308,18 @@ def interactive_menu():
             "📋 Voir les logs",
             "⚙  Configurer (token / user ID)",
             "📦 Installer les dépendances",
+            "⬆  Mettre à jour",
             "✖  Quitter",
         ]
-        actions += [do_kill_all, do_status, do_logs, do_config, do_install, None]
+        actions += [
+            do_kill_all,
+            do_status,
+            do_logs,
+            do_config,
+            do_install,
+            do_update,
+            None,
+        ]
 
         menu = TerminalMenu(
             items,
@@ -225,7 +338,10 @@ def interactive_menu():
         clear()
         print(BANNER)
         print(SEP + "\n")
-        actions[choice]()
+        action = actions[choice]
+        action()
+        if action == do_update:
+            update_info = check_update()
         input(f"\n{D}  ⏎  Entrée pour continuer...{R}")
 
 
@@ -252,6 +368,7 @@ def main():
     sub.add_parser("kill", help="Tout couper (bot + session tmux)")
     sub.add_parser("config", help="Configurer token et user ID")
     sub.add_parser("install", help="Installer les dépendances")
+    sub.add_parser("update", help="Mettre à jour depuis GitHub")
 
     args = parser.parse_args()
 
@@ -268,6 +385,7 @@ def main():
         "kill": do_kill_all,
         "config": do_config,
         "install": do_install,
+        "update": do_update,
     }
     cmds[args.command]()
 
