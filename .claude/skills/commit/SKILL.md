@@ -69,10 +69,12 @@ Où **Type** est un des suivants : `fix`, `feat`, `refactor`, `docs`, `chore`, `
 ## Étape 6 — Créer le tag git
 
 - Crée un tag git annoté : `git tag -a vX.Y.Z -m "vX.Y.Z"`
+- Pousse le tag sur le remote : `git push origin vX.Y.Z`
 
 ## Règles
 
 - Ne jamais committer sans avoir mis à jour le CHANGELOG.md.
-- Ne jamais pousser sur le remote sans demande explicite de l'utilisateur.
+- Ne jamais pousser les **commits** sur le remote sans demande explicite de l'utilisateur.
+- Le push du **tag** est automatique (fait partie de l'étape 6).
 - Ne jamais amender un commit existant sauf demande explicite.
 - Toujours attendre la validation de l'utilisateur sur le type de version avant de committer.

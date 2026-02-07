@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.5.3] - 2026-02-07
+
+### Changed
+- Skill commit : push automatique du tag sur le remote après création
+- Skill commit : clarification des règles (push tag auto, push commits sur demande)
+
 ## [1.5.2] - 2026-02-07
 
 ### Changed
