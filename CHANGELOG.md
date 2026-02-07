@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.4.3] - 2026-02-07
+
+### Fixed
+- Crash de `install.sh` quand `~/.telebot/` existe sans être un repo git (vérification `.git/` avant `git pull`)
+
 ## [1.4.2] - 2026-02-07
 
 ### Fixed

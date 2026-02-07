@@ -72,10 +72,17 @@ echo ""
 
 # --- Installation ---
 if [ -d "$INSTALL_DIR" ]; then
-    info "Dossier $INSTALL_DIR existant, mise à jour..."
-    cd "$INSTALL_DIR"
-    git pull --ff-only || fail "Impossible de mettre à jour. Vérifie l'état du repo."
-    ok "Repo mis à jour"
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        info "Dossier $INSTALL_DIR existant, mise à jour..."
+        cd "$INSTALL_DIR"
+        git pull --ff-only || fail "Impossible de mettre à jour. Vérifie l'état du repo."
+        ok "Repo mis à jour"
+    else
+        info "Dossier $INSTALL_DIR existant mais pas un repo git, réinstallation..."
+        rm -rf "$INSTALL_DIR"
+        git clone "$REPO" "$INSTALL_DIR"
+        ok "Repo cloné"
+    fi
 else
     info "Clonage dans $INSTALL_DIR..."
     git clone "$REPO" "$INSTALL_DIR"
