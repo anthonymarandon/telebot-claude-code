@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.5.1] - 2026-02-07
+
+### Added
+- Affichage dynamique du numéro de version dans le menu interactif du CLI (via `git describe --tags`)
+
 ## [1.5.0] - 2026-02-07
 
 ### Added

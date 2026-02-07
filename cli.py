@@ -262,6 +262,21 @@ C = "\033[36m"  # cyan
 D = "\033[2m"  # dim
 R = "\033[0m"  # reset
 
+
+def get_version():
+    try:
+        ret = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            cwd=DIR,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        return ret.stdout.strip() if ret.returncode == 0 else "?"
+    except Exception:
+        return "?"
+
+
 BANNER = f"""\
 {C}
   ████████╗███████╗██╗     ███████╗██████╗  ██████╗ ████████╗
@@ -287,7 +302,8 @@ def interactive_menu():
         clear()
         bot_running = read_pid() is not None
         print(BANNER)
-        print(f"  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}")
+        print(f"{D}              {get_version()}{R}")
+        print(f"\n  Bot: {bot_status_label()}  |  Tmux: {tmux_status_label()}")
         if update_info:
             print(f"  {D}{C}Mise à jour disponible : {update_info[1]}{R}")
         print(SEP)
