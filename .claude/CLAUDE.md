@@ -22,9 +22,9 @@ Ce fichier est l'orchestrateur central du projet. Il référence toutes les règ
 └── .claude/
     ├── CLAUDE.md       # Ce fichier — orchestrateur central
     └── skills/
-        ├── commit.md/
+        ├── commit/
         │   └── SKILL.md
-        └── auto-update.md/
+        └── auto-update/
             └── SKILL.md
 ```
 
@@ -32,8 +32,8 @@ Ce fichier est l'orchestrateur central du projet. Il référence toutes les règ
 
 | Skill | Invocation | Description |
 |---|---|---|
-| [commit](.claude/skills/commit.md/SKILL.md) | `/commit` | Analyse les changements, détermine la version (patch/minor/major), met à jour le CHANGELOG et commit avec tag |
-| [auto-update](.claude/skills/auto-update.md/SKILL.md) | `/auto-update` | Met à jour les consignes, règles et skills quand un problème est détecté ou une amélioration identifiée |
+| [commit](.claude/skills/commit/SKILL.md) | `/commit` | Analyse les changements, détermine la version (patch/minor/major), met à jour le CHANGELOG et commit avec tag |
+| [auto-update](.claude/skills/auto-update/SKILL.md) | `/auto-update` | Met à jour les consignes, règles et skills quand un problème est détecté ou une amélioration identifiée |
 
 ## Règles globales
 
