@@ -19,6 +19,7 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 ALLOWED_USER_ID = int(os.getenv("ALLOWED_USER_ID", "0"))
 SESSION_NAME = "claude"
+WORKING_DIR = os.path.dirname(os.path.abspath(__file__))
 _last_response = ""  # Dernière réponse extraite, pour éviter les doublons
 _last_text = ""  # Dernier texte filtré envoyé à Telegram
 
@@ -462,7 +463,7 @@ async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if session_exists():
         await update.message.reply_text("Session déjà active.")
         return
-    run(f"tmux new-session -d -s {SESSION_NAME} -x 200 -y 50")
+    run(f"tmux new-session -d -s {SESSION_NAME} -x 200 -y 50 -c {WORKING_DIR}")
     run(f"tmux send-keys -t {SESSION_NAME} -l claude")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await update.message.reply_text("Session Claude Code ouverte.")
