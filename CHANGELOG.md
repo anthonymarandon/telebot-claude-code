@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.5] - 2026-02-08
+
+### Changed
+- Menu des commandes Telegram réduit à `/open`, `/close` et `/help` (plus aéré)
+- Commande `/help` ajoutée, liste toutes les commandes par catégorie (Session / Interaction)
+
 ## [1.7.4] - 2026-02-08
 
 ### Fixed

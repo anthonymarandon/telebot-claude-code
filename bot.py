@@ -442,15 +442,18 @@ async def auto_read(update: Update):
 
 
 @auth
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     assert update.message
     await update.message.reply_text(
         "Bot Claude Code prêt.\n\n"
-        "/open — Ouvrir une session\n"
-        "/close — Fermer la session\n"
-        "/y /n — Confirmer / Refuser\n"
-        "/esc — Annuler\n"
-        "/pick N — Choisir l'option N\n\n"
+        "Session :\n"
+        "  /open — Ouvrir une session\n"
+        "  /close — Fermer la session\n\n"
+        "Interaction :\n"
+        "  /y — Confirmer (Yes)\n"
+        "  /n — Refuser (No)\n"
+        "  /esc — Annuler (Escape)\n"
+        "  /pick N — Choisir l'option N\n\n"
         "Envoie un message texte pour parler à Claude."
     )
 
@@ -532,10 +535,7 @@ async def post_init(application):
         [
             BotCommand("open", "Ouvrir une session"),
             BotCommand("close", "Fermer la session"),
-            BotCommand("y", "Confirmer (Yes)"),
-            BotCommand("n", "Refuser (No)"),
-            BotCommand("esc", "Annuler (Escape)"),
-            BotCommand("pick", "Choisir l'option N"),
+            BotCommand("help", "Aide et commandes"),
         ]
     )
 
@@ -543,7 +543,8 @@ async def post_init(application):
 def main():
     asyncio.set_event_loop(asyncio.new_event_loop())
     app = Application.builder().token(TOKEN).post_init(post_init).build()
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("start", help_cmd))
+    app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("open", open_session))
     app.add_handler(CommandHandler("close", close_session))
     app.add_handler(CommandHandler("y", make_key_handler("y")))
