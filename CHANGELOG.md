@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.3] - 2026-02-08
+
+### Fixed
+- Détection des dialogues de permission élargie à tous les outils (EnterPlanMode, Glob, Read, MCP, etc.) au lieu de 4 seulement (Write, Edit, Bash, NotebookEdit)
+- Outils sans arguments (EnterPlanMode, ExitPlanMode) non reconnus comme tool headers
+
 ## [1.7.2] - 2026-02-08
 
 ### Fixed

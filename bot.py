@@ -160,8 +160,10 @@ def extract_response(capture: str) -> str:
 def _is_tool_header(line: str) -> bool:
     """Détecte une ligne d'invocation d'outil (ex: '  Write(~/Desktop/file.html)')."""
     s = line.strip()
-    # Forme "Tool(args)" ou "Tool mot..."
+    # Forme "Tool(args)", "Tool mot..." ou "Tool" seul (EnterPlanMode, ExitPlanMode)
     for kw in _TOOL_KEYWORDS:
+        if s == kw:
+            return True
         if s.startswith(kw) and len(s) > len(kw):
             next_char = s[len(kw)]
             if next_char in ("(", " ", ":", "/"):
@@ -279,9 +281,6 @@ def is_claude_done(output: str) -> bool:
     return has_response
 
 
-_DIALOG_TOOLS = ("Write", "Edit", "Bash", "NotebookEdit")
-
-
 def _has_pending_tool(output: str) -> bool:
     """Détecte si la réponse se termine par un outil qui attend une confirmation."""
     lines = output.splitlines()
@@ -296,12 +295,9 @@ def _has_pending_tool(output: str) -> bool:
         # Tool output ⎿ → le tool a déjà été exécuté, pas de dialogue
         if stripped.startswith("⎿"):
             return False
-        # Tool header → dialogue probablement en attente
-        for kw in _DIALOG_TOOLS:
-            if stripped.startswith(kw) and len(stripped) > len(kw):
-                next_char = stripped[len(kw)]
-                if next_char in ("(", " ", ":", "/"):
-                    return True
+        # Tool header connu (_TOOL_KEYWORDS) ou outil MCP (mcp__*)
+        if _is_tool_header(lines[i]) or stripped.startswith("mcp__"):
+            return True
         # Autre contenu → pas un tool en attente
         return False
     return False
