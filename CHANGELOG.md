@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.4] - 2026-02-08
+
+### Fixed
+- Mode `bypassPermissions` manquant dans le menu des paramètres de permission
+
 ## [1.7.3] - 2026-02-08
 
 ### Fixed

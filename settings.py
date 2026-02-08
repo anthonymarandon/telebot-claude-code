@@ -9,6 +9,7 @@ SETTINGS_FILE = os.path.join(DIR, ".claude", "settings.local.json")
 PERMISSION_MODES = {
     "default": "Demande pour chaque outil",
     "acceptEdits": "Auto-accepte les éditions de fichiers",
+    "bypassPermissions": "Accepte tout sans confirmation",
     "dontAsk": "Refuse sauf permissions explicites",
     "plan": "Lecture seule (pas de modifications)",
 }
