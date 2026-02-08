@@ -4,6 +4,7 @@
 import argparse
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -125,6 +126,7 @@ def do_start(foreground=False):
             stdout=log,
             stderr=log,
             start_new_session=True,
+            cwd=DIR,
         )
         with open(PID_FILE, "w") as f:
             f.write(str(proc.pid))
@@ -206,6 +208,20 @@ def do_install():
     print("Dépendances installées.")
 
 
+def _get_modified_context_files():
+    """Retourne la liste des fichiers .claude/ modifiés localement."""
+    ret = subprocess.run(
+        ["git", "diff", "--name-only", ".claude/"],
+        cwd=DIR,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    if ret.returncode != 0:
+        return []
+    return [f for f in ret.stdout.strip().splitlines() if f]
+
+
 def do_update():
     print("Vérification des mises à jour...\n")
     result = check_update(timeout=10)
@@ -227,10 +243,50 @@ def do_update():
         print("Mise à jour annulée.")
         return
 
+    # Détecter les fichiers de contexte modifiés par l'utilisateur
+    modified = _get_modified_context_files()
+    keep_context = False
+    backup_dir = None
+
+    if modified:
+        print("\n  Fichiers de contexte personnalisés détectés :")
+        for f in modified:
+            print(f"    • {f}")
+        print()
+        ctx_menu = TerminalMenu(
+            [
+                "Garder mes personnalisations",
+                "Écraser (revenir aux fichiers par défaut)",
+            ],
+            title="  Que faire de vos fichiers de contexte ?",
+            menu_cursor="❯ ",
+            menu_cursor_style=("fg_cyan", "bold"),
+            menu_highlight_style=("fg_cyan", "bold"),
+        )
+        ctx_choice = ctx_menu.show()
+        keep_context = ctx_choice == 0
+
+        if keep_context:
+            # Sauvegarder les fichiers modifiés (arborescence préservée)
+            backup_dir = os.path.join(DIR, ".claude_backup")
+            for f in modified:
+                src = os.path.join(DIR, f)
+                dst = os.path.join(backup_dir, f)
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy2(src, dst)
+
     was_running = read_pid() is not None
     if was_running:
         print("\nArrêt du bot avant mise à jour...")
         do_stop()
+
+    # Reset les fichiers de contexte pour permettre le pull
+    if modified:
+        subprocess.run(
+            ["git", "checkout", "--", ".claude/"],
+            cwd=DIR,
+            capture_output=True,
+        )
 
     print("Téléchargement...")
     ret = subprocess.run(
@@ -241,7 +297,29 @@ def do_update():
     )
     if ret.returncode != 0:
         print(f"\033[31mErreur git pull :\033[0m\n{ret.stderr}")
+        # Restaurer le backup en cas d'échec
+        if backup_dir:
+            for f in modified:
+                src = os.path.join(backup_dir, f)
+                dst = os.path.join(DIR, f)
+                if os.path.exists(src):
+                    shutil.copy2(src, dst)
+            shutil.rmtree(backup_dir)
         return
+
+    # Restaurer les personnalisations si demandé
+    if keep_context and backup_dir:
+        for f in modified:
+            src = os.path.join(backup_dir, f)
+            dst = os.path.join(DIR, f)
+            if os.path.exists(src):
+                shutil.copy2(src, dst)
+        shutil.rmtree(backup_dir)
+        print("Personnalisations restaurées.")
+
+    # Nettoyer le backup si écraser
+    if backup_dir and os.path.exists(backup_dir):
+        shutil.rmtree(backup_dir)
 
     print("Mise à jour des dépendances...")
     subprocess.run(
@@ -262,6 +340,37 @@ def do_update():
     if was_running:
         print("Redémarrage du bot...")
         do_start()
+
+
+def do_reset_context():
+    """Restaure les fichiers de contexte (.claude/) à leur état d'origine."""
+    modified = _get_modified_context_files()
+    if not modified:
+        print("Les fichiers de contexte sont déjà à leur état d'origine.")
+        return
+
+    print("Fichiers modifiés :")
+    for f in modified:
+        print(f"  • {f}")
+    print()
+    menu = TerminalMenu(
+        ["Oui, restaurer les fichiers par défaut", "Non, annuler"],
+        title="  Remettre les fichiers de contexte par défaut ?",
+        menu_cursor="❯ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_cyan", "bold"),
+    )
+    choice = menu.show()
+    if choice != 0:
+        print("Annulé.")
+        return
+
+    subprocess.run(
+        ["git", "checkout", "--", ".claude/"],
+        cwd=DIR,
+        capture_output=True,
+    )
+    print("Fichiers de contexte restaurés.")
 
 
 # --- Menu interactif ---
@@ -343,6 +452,7 @@ def interactive_menu():
             "📋 Voir les logs",
             "⚙  Configurer (token / user ID)",
             "📦 Installer les dépendances",
+            "🔄 Réinitialiser le contexte",
             "⬆  Mettre à jour",
             "✖  Quitter",
         ]
@@ -352,6 +462,7 @@ def interactive_menu():
             do_logs,
             do_config,
             do_install,
+            do_reset_context,
             do_update,
             None,
         ]
@@ -403,6 +514,7 @@ def main():
     sub.add_parser("kill", help="Tout couper (bot + session tmux)")
     sub.add_parser("config", help="Configurer token et user ID")
     sub.add_parser("install", help="Installer les dépendances")
+    sub.add_parser("reset-context", help="Réinitialiser les fichiers de contexte")
     sub.add_parser("update", help="Mettre à jour depuis GitHub")
 
     args = parser.parse_args()
@@ -420,6 +532,7 @@ def main():
         "kill": do_kill_all,
         "config": do_config,
         "install": do_install,
+        "reset-context": do_reset_context,
         "update": do_update,
     }
     cmds[args.command]()

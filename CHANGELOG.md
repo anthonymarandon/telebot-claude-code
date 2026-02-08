@@ -4,6 +4,16 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.6.0] - 2026-02-08
+
+### Fixed
+- Session tmux démarrait dans `~` au lieu du répertoire d'installation (contexte `.claude/` non chargé)
+- Processus bot héritait du cwd de l'appelant au lieu de `~/.telebot/`
+
+### Added
+- Préservation des personnalisations `.claude/` lors des mises à jour (choix garder/écraser)
+- Commande `reset-context` pour restaurer les fichiers de contexte par défaut (menu + CLI)
+
 ## [1.5.4] - 2026-02-07
 
 ### Added
