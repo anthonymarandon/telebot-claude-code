@@ -341,6 +341,10 @@ def do_update():
         print("Redémarrage du bot...")
         do_start()
 
+    print("Relancement du CLI...")
+    python = get_python()
+    os.execv(python, [python, os.path.join(DIR, "cli.py")])
+
 
 def do_reset_context():
     """Restaure les fichiers de contexte (.claude/) à leur état d'origine."""

@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.6.1] - 2026-02-08
+
+### Fixed
+- Le CLI restait sur l'ancienne version après une mise à jour (relancement automatique via `os.execv`)
+
 ## [1.6.0] - 2026-02-08
 
 ### Fixed
