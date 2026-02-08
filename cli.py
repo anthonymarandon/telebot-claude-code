@@ -163,14 +163,55 @@ def do_logs(lines=30):
     subprocess.run(["tail", f"-{lines}", LOG_FILE])
 
 
+def _read_env():
+    """Lit les valeurs actuelles du .env."""
+    values = {}
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    key, val = line.split("=", 1)
+                    values[key.strip()] = val.strip()
+    return values
+
+
+def _mask_token(token: str) -> str:
+    if len(token) <= 8:
+        return "***"
+    return token[:4] + "…" + token[-4:]
+
+
 def do_config():
-    print("Configuration du bot\n")
-    token = input("Token Telegram (BotFather) : ").strip()
-    user_id = input("Ton User ID Telegram      : ").strip()
+    env = _read_env()
+    token = env.get("TELEGRAM_BOT_TOKEN", "")
+    user_id = env.get("ALLOWED_USER_ID", "")
+
+    if token or user_id:
+        print("  Configuration actuelle\n")
+        print(f"  Token   : {_mask_token(token) if token else '(non défini)'}")
+        print(f"  User ID : {user_id or '(non défini)'}")
+        print()
+        menu = TerminalMenu(
+            ["Modifier", "← Retour"],
+            title="  Que faire ?",
+            menu_cursor="❯ ",
+            menu_cursor_style=("fg_cyan", "bold"),
+            menu_highlight_style=("fg_cyan", "bold"),
+        )
+        if menu.show() != 0:
+            return
+        print()
+
+    print("  Configuration du bot\n")
+    new_token = input(
+        f"  Token Telegram (BotFather) [{_mask_token(token) if token else ''}] : "
+    ).strip()
+    new_user_id = input(f"  User ID Telegram [{user_id}] : ").strip()
     with open(ENV_FILE, "w") as f:
-        f.write(f"TELEGRAM_BOT_TOKEN={token}\n")
-        f.write(f"ALLOWED_USER_ID={user_id}\n")
-    print("\n.env sauvegardé.")
+        f.write(f"TELEGRAM_BOT_TOKEN={new_token or token}\n")
+        f.write(f"ALLOWED_USER_ID={new_user_id or user_id}\n")
+    print("\n  .env sauvegardé.")
 
 
 def do_kill_all():

@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.2] - 2026-02-08
+
+### Fixed
+- Configuration Token/User ID affiche désormais les valeurs actuelles (token masqué) au lieu de les écraser systématiquement
+
 ## [1.7.1] - 2026-02-08
 
 ### Fixed
