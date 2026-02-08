@@ -418,14 +418,14 @@ def do_permissions():
         presets = list(telebot_settings.PERMISSION_PRESETS.items())
         for name, rules in presets:
             enabled = telebot_settings.is_preset_enabled(rules)
-            mark = f"{C}[✓]{R}" if enabled else "[ ]"
+            mark = "[x]" if enabled else "[ ]"
             items.append(f"{mark} {name}")
         bash_rules = telebot_settings.get_bash_rules()
         if bash_rules:
             patterns = ", ".join(r[5:-1] for r in bash_rules)  # Bash(x) → x
-            items.append(f"{D}Bash : {patterns}{R}")
+            items.append(f"Bash : {patterns}")
         else:
-            items.append(f"{D}Bash : (aucune règle){R}")
+            items.append("Bash : (aucune règle)")
         items += ["+ Ajouter une règle Bash", "- Supprimer une règle", "← Retour"]
         menu = TerminalMenu(
             items,

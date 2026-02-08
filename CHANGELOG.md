@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.1] - 2026-02-08
+
+### Fixed
+- Duplication de lignes dans le menu des permissions (codes ANSI dans les items TerminalMenu causaient des artefacts de rendu)
+
 ## [1.7.0] - 2026-02-08
 
 ### Added
