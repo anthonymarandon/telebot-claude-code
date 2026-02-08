@@ -14,6 +14,8 @@ from telegram.ext import (
     filters,
 )
 
+import settings as telebot_settings
+
 load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -464,7 +466,9 @@ async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Session déjà active.")
         return
     run(f"tmux new-session -d -s {SESSION_NAME} -x 200 -y 50 -c {WORKING_DIR}")
-    run(f"tmux send-keys -t {SESSION_NAME} -l claude")
+    flags = telebot_settings.get_claude_flags()
+    cmd = f"claude {flags}".strip()
+    run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([cmd])}")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await update.message.reply_text("Session Claude Code ouverte.")
 

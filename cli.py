@@ -2,6 +2,7 @@
 """CLI interactif de gestion du bot Telegram Claude Code."""
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -11,6 +12,8 @@ import sys
 import time
 
 from simple_term_menu import TerminalMenu
+
+import settings as telebot_settings
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 PID_FILE = os.path.join(DIR, ".bot.pid")
@@ -377,11 +380,167 @@ def do_reset_context():
     print("Fichiers de contexte restaurés.")
 
 
-# --- Menu interactif ---
-
 C = "\033[36m"  # cyan
 D = "\033[2m"  # dim
 R = "\033[0m"  # reset
+
+
+# --- Paramètres ---
+
+
+def do_permission_mode():
+    current = telebot_settings.get_permission_mode()
+    items = []
+    for mode, desc in telebot_settings.PERMISSION_MODES.items():
+        check = " ✓" if mode == current else ""
+        items.append(f"{mode:<16} — {desc}{check}")
+    items.append("← Retour")
+    print(f"  Mode actuel : {C}{current}{R}\n")
+    menu = TerminalMenu(
+        items,
+        title="  Mode de permission",
+        menu_cursor="❯ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_cyan", "bold"),
+    )
+    choice = menu.show()
+    modes = list(telebot_settings.PERMISSION_MODES.keys())
+    if choice is not None and isinstance(choice, int) and choice < len(modes):
+        telebot_settings.set_permission_mode(modes[choice])
+        print(f"\n  Mode changé : {C}{modes[choice]}{R}")
+
+
+def do_permissions():
+    while True:
+        clear()
+        print(f"\n  {C}Permissions auto-acceptées{R}\n")
+        items = []
+        presets = list(telebot_settings.PERMISSION_PRESETS.items())
+        for name, rules in presets:
+            enabled = telebot_settings.is_preset_enabled(rules)
+            mark = f"{C}[✓]{R}" if enabled else "[ ]"
+            items.append(f"{mark} {name}")
+        bash_rules = telebot_settings.get_bash_rules()
+        if bash_rules:
+            patterns = ", ".join(r[5:-1] for r in bash_rules)  # Bash(x) → x
+            items.append(f"{D}Bash : {patterns}{R}")
+        else:
+            items.append(f"{D}Bash : (aucune règle){R}")
+        items += ["+ Ajouter une règle Bash", "- Supprimer une règle", "← Retour"]
+        menu = TerminalMenu(
+            items,
+            menu_cursor="❯ ",
+            menu_cursor_style=("fg_cyan", "bold"),
+            menu_highlight_style=("fg_cyan", "bold"),
+        )
+        choice = menu.show()
+        if choice is None or not isinstance(choice, int):
+            return
+        # Toggle preset
+        if choice < len(presets):
+            name, rules = presets[choice]
+            enabled = telebot_settings.is_preset_enabled(rules)
+            telebot_settings.toggle_preset(rules, not enabled)
+            continue
+        # Bash info line → skip
+        bash_line_idx = len(presets)
+        if choice == bash_line_idx:
+            continue
+        offset = bash_line_idx + 1
+        if choice == offset:  # Ajouter Bash
+            pattern = input("\n  Pattern Bash (ex: git *, npm run *) : ").strip()
+            if pattern:
+                telebot_settings.add_permission(f"Bash({pattern})")
+                print(f"  Ajouté : Bash({pattern})")
+            continue
+        if choice == offset + 1:  # Supprimer
+            removable = telebot_settings.get_user_allowed()
+            if not removable:
+                print("\n  Aucune permission à supprimer.")
+                input(f"\n{D}  ⏎  Entrée pour continuer...{R}")
+                continue
+            rm_items = removable + ["← Annuler"]
+            rm_menu = TerminalMenu(
+                rm_items,
+                title="  Supprimer quelle permission ?",
+                menu_cursor="❯ ",
+                menu_cursor_style=("fg_cyan", "bold"),
+                menu_highlight_style=("fg_cyan", "bold"),
+            )
+            rm_choice = rm_menu.show()
+            if (
+                rm_choice is not None
+                and isinstance(rm_choice, int)
+                and rm_choice < len(removable)
+            ):
+                telebot_settings.remove_permission(removable[rm_choice])
+                print(f"\n  Supprimé : {removable[rm_choice]}")
+            continue
+        return  # ← Retour
+
+
+def do_show_settings():
+    data = telebot_settings.load_settings()
+    print(f"  {C}Configuration actuelle{R}")
+    print(f"  Fichier : {telebot_settings.SETTINGS_FILE}\n")
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+def do_reset_settings():
+    menu = TerminalMenu(
+        ["Oui, réinitialiser", "Non, annuler"],
+        title="  Remettre les paramètres par défaut ?",
+        menu_cursor="❯ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_cyan", "bold"),
+    )
+    choice = menu.show()
+    if choice == 0:
+        telebot_settings.reset_to_defaults()
+        print("  Paramètres réinitialisés.")
+    else:
+        print("  Annulé.")
+
+
+def do_settings():
+    while True:
+        clear()
+        mode = telebot_settings.get_permission_mode()
+        print(f"\n  {C}Paramètres{R}\n")
+        items = [
+            f"🔐 Mode de permission          ({mode})",
+            "🛡  Permissions auto-acceptées",
+            "📄 Voir la configuration",
+            "🔑 Token / User ID (.env)",
+            "♻  Réinitialiser les paramètres",
+            "← Retour",
+        ]
+        menu = TerminalMenu(
+            items,
+            menu_cursor="❯ ",
+            menu_cursor_style=("fg_cyan", "bold"),
+            menu_highlight_style=("fg_cyan", "bold"),
+        )
+        choice = menu.show()
+        if choice is None or not isinstance(choice, int) or choice == 5:
+            return
+        clear()
+        print(f"\n  {C}Paramètres{R}\n")
+        if choice == 0:
+            do_permission_mode()
+        elif choice == 1:
+            do_permissions()
+            continue  # do_permissions gère son propre écran
+        elif choice == 2:
+            do_show_settings()
+        elif choice == 3:
+            do_config()
+        elif choice == 4:
+            do_reset_settings()
+        input(f"\n{D}  ⏎  Entrée pour continuer...{R}")
+
+
+# --- Menu interactif ---
 
 
 def get_version():
@@ -454,7 +613,7 @@ def interactive_menu():
             "⏻  Tout couper (bot + session tmux)",
             "ℹ  Statut",
             "📋 Voir les logs",
-            "⚙  Configurer (token / user ID)",
+            "⚙  Paramètres",
             "📦 Installer les dépendances",
             "🔄 Réinitialiser le contexte",
             "⬆  Mettre à jour",
@@ -464,7 +623,7 @@ def interactive_menu():
             do_kill_all,
             do_status,
             do_logs,
-            do_config,
+            do_settings,
             do_install,
             do_reset_context,
             do_update,
@@ -485,10 +644,13 @@ def interactive_menu():
             print(f"{D}  Bye.{R}")
             break
 
+        action = actions[choice]
+        if action == do_settings:
+            action()
+            continue
         clear()
         print(BANNER)
         print(SEP + "\n")
-        action = actions[choice]
         action()
         if action == do_update:
             update_info = check_update()
@@ -520,6 +682,7 @@ def main():
     sub.add_parser("install", help="Installer les dépendances")
     sub.add_parser("reset-context", help="Réinitialiser les fichiers de contexte")
     sub.add_parser("update", help="Mettre à jour depuis GitHub")
+    sub.add_parser("settings", help="Gérer les paramètres Claude Code")
 
     args = parser.parse_args()
 
@@ -538,6 +701,7 @@ def main():
         "install": do_install,
         "reset-context": do_reset_context,
         "update": do_update,
+        "settings": do_settings,
     }
     cmds[args.command]()
 

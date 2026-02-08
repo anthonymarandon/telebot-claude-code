@@ -4,6 +4,18 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.0] - 2026-02-08
+
+### Added
+- Menu Paramètres dans le CLI avec sous-menu dédié (mode de permission, permissions auto-acceptées, visualisation config, réinitialisation)
+- Module `settings.py` pour gérer `.claude/settings.local.json` (permissions allow/deny, presets, règles Bash custom)
+- Toggle de presets de permissions (édition fichiers, accès web, lecture) et ajout/suppression de règles Bash
+- Le bot passe les flags `--permission-mode` au lancement de la session Claude via tmux
+- Commande CLI directe `bot settings` pour accéder aux paramètres
+
+### Changed
+- Entrée "Configurer (token / user ID)" remplacée par "Paramètres" dans le menu principal (token/user ID déplacé dans le sous-menu)
+
 ## [1.6.1] - 2026-02-08
 
 ### Fixed
