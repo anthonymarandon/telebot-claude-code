@@ -93,6 +93,10 @@ cd "$INSTALL_DIR"
 
 # --- Environnement virtuel ---
 info "Configuration de l'environnement virtuel..."
+if [ -d "venv" ] && [ ! -x "venv/bin/pip" ]; then
+    info "venv cassé (pip absent), recréation..."
+    rm -rf venv
+fi
 if [ ! -d "venv" ]; then
     $PY -m venv venv
     ok "venv créé"

@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.6] - 2026-02-09
+
+### Fixed
+- Script d'installation crashait si le venv existant était cassé (pip absent après mise à jour Python système) — recréation automatique du venv
+
 ## [1.7.5] - 2026-02-08
 
 ### Changed
