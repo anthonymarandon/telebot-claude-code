@@ -24,6 +24,7 @@ SESSION_NAME = "claude"
 WORKING_DIR = os.path.dirname(os.path.abspath(__file__))
 _last_response = ""  # Dernière réponse extraite, pour éviter les doublons
 _last_text = ""  # Dernier texte filtré envoyé à Telegram
+_auto_read_task: asyncio.Task | None = None  # Tâche auto_read en cours
 
 # Mots-clés d'outils Claude Code pour filtrer le tool output
 _TOOL_KEYWORDS = (
@@ -363,8 +364,26 @@ async def send_chunks(update: Update, text: str):
         )
 
 
+def start_auto_read(update: Update):
+    """Lance auto_read en tâche de fond, annule la précédente si elle tourne encore."""
+    global _auto_read_task
+    if _auto_read_task and not _auto_read_task.done():
+        _auto_read_task.cancel()
+    _auto_read_task = asyncio.create_task(auto_read(update))
+
+
 async def auto_read(update: Update):
     """Surveille le terminal et envoie le texte de Claude au fil de l'eau (sans tool output)."""
+    assert update.message
+    global _last_response, _last_text
+    try:
+        await _auto_read_loop(update)
+    except asyncio.CancelledError:
+        return
+
+
+async def _auto_read_loop(update: Update):
+    """Boucle interne de auto_read (séparée pour gestion propre du CancelledError)."""
     assert update.message
     global _last_response, _last_text
     await asyncio.sleep(1)
@@ -470,7 +489,7 @@ async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([cmd])}")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await update.message.reply_text("Session Claude Code ouverte.")
-    await auto_read(update)
+    start_auto_read(update)
 
 
 @auth
@@ -496,7 +515,7 @@ async def plain_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text or ""
     run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([msg])}")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
-    await auto_read(update)
+    start_auto_read(update)
 
 
 def make_key_handler(key: str):
@@ -509,7 +528,7 @@ def make_key_handler(key: str):
             await update.message.reply_text("Aucune session active. /open d'abord.")
             return
         run(f"tmux send-keys -t {SESSION_NAME} {key}")
-        await auto_read(update)
+        start_auto_read(update)
 
     return handler
 
@@ -528,7 +547,7 @@ async def pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for _ in range(max(0, n - 1)):
         run(f"tmux send-keys -t {SESSION_NAME} Down")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
-    await auto_read(update)
+    start_auto_read(update)
 
 
 async def post_init(application):

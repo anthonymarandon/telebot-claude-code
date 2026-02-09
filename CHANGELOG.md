@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.8] - 2026-02-09
+
+### Fixed
+- Latence jusqu'à 30s entre les messages — `auto_read` lancé en tâche de fond au lieu de bloquer le handler, avec annulation automatique de la tâche précédente
+
 ## [1.7.7] - 2026-02-09
 
 ### Fixed
