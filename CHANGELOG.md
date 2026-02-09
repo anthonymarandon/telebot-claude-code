@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.7.7] - 2026-02-09
+
+### Fixed
+- Trust prompt au premier lancement ("Is this a project you trust?") non détecté par le bot — ajout de `auto_read` après `/open`
+
 ## [1.7.6] - 2026-02-09
 
 ### Fixed

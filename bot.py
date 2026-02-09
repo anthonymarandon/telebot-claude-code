@@ -470,6 +470,7 @@ async def open_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([cmd])}")
     run(f"tmux send-keys -t {SESSION_NAME} Enter")
     await update.message.reply_text("Session Claude Code ouverte.")
+    await auto_read(update)
 
 
 @auth
