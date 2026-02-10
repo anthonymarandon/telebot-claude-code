@@ -186,8 +186,11 @@ def extract_claude_text(capture: str) -> str:
     for line in lines[start:end]:
         stripped = line.strip()
         if not stripped:
-            if in_claude_text and not in_tool:
-                text_lines.append("")
+            if in_claude_text:
+                if in_tool:
+                    in_tool = False
+                else:
+                    text_lines.append("")
             continue
         # Marqueur de réponse Claude ⏺
         if stripped.startswith(("⏺", "●")):
@@ -396,7 +399,7 @@ async def _auto_read_loop(update: Update):
             await update.message.chat.send_action(ChatAction.TYPING)
         except Exception:
             pass  # Ignorer les erreurs réseau sur l'indicateur typing
-        output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
+        output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -2000")
         # Mettre à jour la réponse complète (pour le tracking interne)
         response = extract_response(output)
         if response:
@@ -416,10 +419,10 @@ async def _auto_read_loop(update: Update):
             return
         # Claude a fini ? Polling adaptatif pour attendre un éventuel dialogue
         if is_claude_done(output):
-            max_checks = 5 if _has_pending_tool(output) else 2
+            max_checks = 8 if _has_pending_tool(output) else 5
             for _check in range(max_checks):
                 await asyncio.sleep(1)
-                output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -500")
+                output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -2000")
                 if not is_claude_done(output):
                     break  # Faux positif, Claude travaille encore
                 dialog = extract_dialog(output)
@@ -513,8 +516,17 @@ async def plain_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Aucune session active. /open d'abord.")
         return
     msg = update.message.text or ""
-    run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([msg])}")
-    run(f"tmux send-keys -t {SESSION_NAME} Enter")
+    # Détecter si un dialogue interactif est actif (menu numéroté)
+    # Dans ce cas, le chiffre seul suffit — un Enter en trop validerait le lot suivant
+    output = run(f"tmux capture-pane -t {SESSION_NAME} -p -S -2000")
+    dialog = extract_dialog(output)
+    if dialog and msg.strip().isdigit():
+        run(
+            f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([msg.strip()])}"
+        )
+    else:
+        run(f"tmux send-keys -t {SESSION_NAME} -l {subprocess.list2cmdline([msg])}")
+        run(f"tmux send-keys -t {SESSION_NAME} Enter")
     start_auto_read(update)
 
 

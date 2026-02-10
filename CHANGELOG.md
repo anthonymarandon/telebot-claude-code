@@ -4,6 +4,14 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.8] - 2026-02-10
+
+### Fixed
+- AskUserQuestion multi-lots : le Enter en trop après un chiffre validait le lot suivant avec la valeur par défaut — détection de dialogue actif avant envoi
+- Texte résumé après plan mode (Write/Edit) jamais envoyé — `in_tool` restait bloqué à `True` dans `extract_claude_text`
+- Polling post-completion trop court (2s) pour détecter les dialogues tardifs — augmenté à 5s (8s avec tool pending)
+- Capture tmux limitée à 500 lignes insuffisante pour les longues réponses plan mode — augmentée à 2000 lignes
+
 ## [1.8.7] - 2026-02-10
 
 ### Fixed
