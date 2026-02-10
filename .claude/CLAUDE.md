@@ -51,6 +51,41 @@ pas validés ce qui pouvait causer des erreurs. Deuxièmement, il y avait un
 cas de division par zéro quand le dénominateur était nul...
 ```
 
+## Envoi de médias — API Telegram
+
+Quand tu dois transmettre une image, un fichier ou un autre média à l'utilisateur, utilise directement l'API REST Telegram via `curl` (ou tout outil HTTP disponible).
+
+### URL de base
+```
+https://api.telegram.org/bot<TOKEN>/sendPhoto
+```
+
+Le `TOKEN` et le `CHAT_ID` sont dans le `.env` du projet (`BOT_TOKEN` et `USER_ID`).
+
+### Endpoints disponibles
+| Endpoint | Usage |
+|---|---|
+| `sendPhoto` | Images (PNG, JPG…) |
+| `sendDocument` | Fichiers (PDF, ZIP…) |
+| `sendVideo` | Vidéos |
+| `sendAudio` | Audio |
+| `sendVoice` | Messages vocaux |
+| `sendAnimation` | GIFs |
+
+### Exemple curl
+```bash
+curl -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
+  -F "chat_id=${USER_ID}" \
+  -F "photo=@/chemin/vers/image.png" \
+  -F "caption=Ma légende"
+```
+
+### Règles
+- Toujours utiliser `-F` (multipart/form-data) avec `@` devant le chemin du fichier
+- Lire `BOT_TOKEN` et `USER_ID` depuis le `.env` (jamais en dur)
+- Ajouter une `caption` descriptive quand c'est pertinent
+- Privilégier `sendPhoto` pour les images, `sendDocument` pour le reste
+
 ## Questions à l'utilisateur — INTERDIT d'utiliser AskUserQuestion
 
 **Ne JAMAIS utiliser l'outil `AskUserQuestion`**. Il génère des cases à cocher et des formats incompatibles avec Telegram.

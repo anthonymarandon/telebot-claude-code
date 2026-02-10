@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.9.1] - 2026-02-10
+
+### Added
+- Consignes d'envoi de médias via l'API Telegram dans CLAUDE.md (sendPhoto, sendDocument, sendVideo, sendAudio, sendVoice, sendAnimation)
+
 ## [1.9.0] - 2026-02-10
 
 ### Changed
