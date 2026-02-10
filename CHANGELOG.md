@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.3] - 2026-02-10
+
+### Changed
+- Le script d'installation lance automatiquement le CLI interactif à la fin, au lieu d'afficher la liste des commandes
+
 ## [1.8.2] - 2026-02-10
 
 ### Fixed

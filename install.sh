@@ -150,11 +150,6 @@ fi
 
 # --- Terminé ---
 echo ""
-printf "${G}${B}Installation terminée !${N}\n\n"
-printf "  Utilisation :\n"
-printf "    ${C}telebot${N}          Menu interactif\n"
-printf "    ${C}telebot start${N}    Démarrer le bot\n"
-printf "    ${C}telebot stop${N}     Arrêter le bot\n"
-printf "    ${C}telebot status${N}   Voir l'état\n"
-printf "    ${C}telebot config${N}   Reconfigurer\n"
-echo ""
+printf "${G}${B}Installation terminée !${N}\n"
+printf "${D}  Lancement du menu interactif...${N}\n\n"
+exec "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/cli.py"
