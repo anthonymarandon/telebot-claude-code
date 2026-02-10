@@ -4,6 +4,13 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.0] - 2026-02-10
+
+### Added
+- Option "Désinstaller" dans le menu interactif du CLI (avant "Quitter") et en commande directe (`telebot uninstall`)
+- Double confirmation de sécurité (menu + saisie du mot DÉSINSTALLER) avant suppression
+- Nettoyage complet : arrêt du bot, fermeture tmux, suppression du wrapper `~/.local/bin/telebot` et du dossier `~/.telebot/`
+
 ## [1.7.8] - 2026-02-09
 
 ### Fixed

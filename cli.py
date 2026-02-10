@@ -390,6 +390,64 @@ def do_update():
     os.execv(python, [python, os.path.join(DIR, "cli.py")])
 
 
+def do_uninstall():
+    """Désinstalle complètement Telebot (fichiers, venv, commande)."""
+    bin_path = os.path.join(os.path.expanduser("~"), ".local", "bin", "telebot")
+
+    print(f"  {C}Désinstallation de Telebot{R}\n")
+    print("  Cette action va supprimer :")
+    print(f"    • Le dossier complet    {D}{DIR}{R}")
+    print(f"    • La commande           {D}{bin_path}{R}")
+    print("    • Le .env (token inclus)")
+    print("    • Les logs et le venv")
+    print()
+
+    menu = TerminalMenu(
+        ["Oui, désinstaller", "Non, annuler"],
+        title="  Supprimer définitivement Telebot ?",
+        menu_cursor="❯ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_cyan", "bold"),
+    )
+    if menu.show() != 0:
+        print("  Annulé.")
+        return
+
+    confirm = input(f"\n  Tape {C}DÉSINSTALLER{R} pour confirmer : ").strip()
+    if confirm != "DÉSINSTALLER":
+        print("  Annulé.")
+        return
+
+    print()
+
+    # Arrêter le bot
+    pid = read_pid()
+    if pid:
+        os.kill(pid, signal.SIGTERM)
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
+        print("  Bot arrêté.")
+
+    # Fermer la session tmux
+    ret = subprocess.run("tmux has-session -t claude", shell=True, capture_output=True)
+    if ret.returncode == 0:
+        subprocess.run("tmux kill-session -t claude", shell=True, capture_output=True)
+        print("  Session tmux fermée.")
+
+    # Supprimer la commande telebot du PATH
+    if os.path.exists(bin_path):
+        os.remove(bin_path)
+        print(f"  Commande supprimée : {bin_path}")
+
+    # Supprimer le dossier complet
+    install_dir = DIR
+    shutil.rmtree(install_dir, ignore_errors=True)
+    print(f"  Dossier supprimé : {install_dir}")
+
+    print(f"\n  {C}Telebot a été désinstallé.{R}")
+    sys.exit(0)
+
+
 def do_reset_context():
     """Restaure les fichiers de contexte (.claude/) à leur état d'origine."""
     modified = _get_modified_context_files()
@@ -658,6 +716,7 @@ def interactive_menu():
             "📦 Installer les dépendances",
             "🔄 Réinitialiser le contexte",
             "⬆  Mettre à jour",
+            "🗑  Désinstaller",
             "✖  Quitter",
         ]
         actions += [
@@ -668,6 +727,7 @@ def interactive_menu():
             do_install,
             do_reset_context,
             do_update,
+            do_uninstall,
             None,
         ]
 
@@ -724,6 +784,7 @@ def main():
     sub.add_parser("reset-context", help="Réinitialiser les fichiers de contexte")
     sub.add_parser("update", help="Mettre à jour depuis GitHub")
     sub.add_parser("settings", help="Gérer les paramètres Claude Code")
+    sub.add_parser("uninstall", help="Désinstaller Telebot")
 
     args = parser.parse_args()
 
@@ -743,6 +804,7 @@ def main():
         "reset-context": do_reset_context,
         "update": do_update,
         "settings": do_settings,
+        "uninstall": do_uninstall,
     }
     cmds[args.command]()
 
