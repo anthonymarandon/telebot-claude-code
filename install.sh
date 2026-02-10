@@ -136,9 +136,9 @@ if [ ! -f "$INSTALL_DIR/.env" ]; then
     info "Configuration initiale..."
     echo ""
     printf "  Token Telegram (BotFather) : "
-    read -r TOKEN
+    read -r TOKEN < /dev/tty
     printf "  Ton User ID Telegram       : "
-    read -r USER_ID
+    read -r USER_ID < /dev/tty
     cat > "$INSTALL_DIR/.env" << ENV
 TELEGRAM_BOT_TOKEN=$TOKEN
 ALLOWED_USER_ID=$USER_ID
@@ -152,4 +152,4 @@ fi
 echo ""
 printf "${G}${B}Installation terminée !${N}\n"
 printf "${D}  Lancement du menu interactif...${N}\n\n"
-exec "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/cli.py"
+exec "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/cli.py" < /dev/tty

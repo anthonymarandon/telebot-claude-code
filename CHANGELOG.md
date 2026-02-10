@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.4] - 2026-02-10
+
+### Fixed
+- Installation via `curl | bash` : les inputs (token, user ID) et le lancement du CLI lisent depuis `/dev/tty` au lieu du pipe stdin
+
 ## [1.8.3] - 2026-02-10
 
 ### Changed
