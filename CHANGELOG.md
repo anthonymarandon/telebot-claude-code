@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.9.0] - 2026-02-10
+
+### Changed
+- AskUserQuestion interdit — les questions sont posées directement dans le chat (texte normal avec options numérotées)
+- Plan mode adapté Telegram — le plan est écrit dans un fichier `.md` sur le Bureau, sortie immédiate du plan mode, validation par l'utilisateur via chat
+
 ## [1.8.9] - 2026-02-10
 
 ### Added

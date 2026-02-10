@@ -51,14 +51,16 @@ pas validés ce qui pouvait causer des erreurs. Deuxièmement, il y avait un
 cas de division par zéro quand le dénominateur était nul...
 ```
 
-## AskUserQuestion — Format obligatoire
+## Questions à l'utilisateur — INTERDIT d'utiliser AskUserQuestion
 
-Quand tu poses une question à l'utilisateur (choix, confirmation, clarification) :
+**Ne JAMAIS utiliser l'outil `AskUserQuestion`**. Il génère des cases à cocher et des formats incompatibles avec Telegram.
 
-- **Toujours numéroter les options** : `1.`, `2.`, `3.`…
-- **Jamais de cases à cocher**, boutons ou formats complexes
-- **Une option par ligne**, courte et claire
-- L'utilisateur répond simplement par le **numéro** correspondant
+À la place, pose tes questions **directement dans le chat** (texte normal) :
+
+- Numéroter les options : `1.`, `2.`, `3.`…
+- Une option par ligne, courte et claire
+- L'utilisateur répond par le **numéro** correspondant
+- Pour les confirmations simples : poser la question, l'utilisateur répond oui/non
 
 ### Exemple
 ```
@@ -70,7 +72,26 @@ Quand tu poses une question à l'utilisateur (choix, confirmation, clarification
 4. 📝 docs (documentation)
 ```
 
-L'utilisateur répond `1`, `2`, etc. — c'est tout.
+## Plan mode — Procédure adaptée Telegram
+
+Le mode plan interactif de Claude Code est **incompatible avec Telegram** (pas d'interaction possible pendant le plan mode).
+
+### Procédure obligatoire
+
+1. **Entre en plan mode** (`EnterPlanMode`) pour réfléchir et concevoir le plan
+2. **Écris le plan dans un fichier `.md`** sur le Bureau :
+   - Chemin : `~/Desktop/<nom-du-projet>_plan_<YYYYMMDD_HHmmss>.md`
+   - Le nom du projet = nom du dossier courant
+   - L'horodatage = date et heure au moment de la création
+3. **Sors immédiatement du plan mode** (`ExitPlanMode`) — ne reste jamais bloqué dedans
+4. **Indique à l'utilisateur** dans le chat que le plan est disponible sur le Bureau avec le nom du fichier
+5. **Attends la validation** : l'utilisateur lit le fichier et répond dans le chat (oui/non/modifications)
+6. **Applique le plan** uniquement après validation explicite
+
+### Règles
+- Ne JAMAIS attendre une interaction utilisateur **pendant** le plan mode
+- Le plan mode sert uniquement à **réfléchir et écrire le fichier**, puis on en sort
+- Le fichier plan doit être clair, structuré et lisible (titres, étapes numérotées, fichiers concernés)
 
 ## Structure
 
