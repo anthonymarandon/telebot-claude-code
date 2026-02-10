@@ -130,24 +130,6 @@ if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
     printf "\n         ${C}export PATH=\"\$HOME/.local/bin:\$PATH\"${N}\n"
 fi
 
-# --- Configuration ---
-echo ""
-if [ ! -f "$INSTALL_DIR/.env" ]; then
-    info "Configuration initiale..."
-    echo ""
-    printf "  Token Telegram (BotFather) : "
-    read -r TOKEN < /dev/tty
-    printf "  Ton User ID Telegram       : "
-    read -r USER_ID < /dev/tty
-    cat > "$INSTALL_DIR/.env" << ENV
-TELEGRAM_BOT_TOKEN=$TOKEN
-ALLOWED_USER_ID=$USER_ID
-ENV
-    ok ".env configuré"
-else
-    ok ".env déjà présent, configuration conservée"
-fi
-
 # --- Terminé ---
 echo ""
 printf "${G}${B}Installation terminée !${N}\n"
