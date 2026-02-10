@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.1] - 2026-02-10
+
+### Fixed
+- Confirmation de désinstallation sans accent (`DESINSTALLER` au lieu de `DÉSINSTALLER`) — le É majuscule n'est pas accessible sur tous les claviers
+
 ## [1.8.0] - 2026-02-10
 
 ### Added

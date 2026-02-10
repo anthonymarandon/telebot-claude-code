@@ -413,8 +413,8 @@ def do_uninstall():
         print("  Annulé.")
         return
 
-    confirm = input(f"\n  Tape {C}DÉSINSTALLER{R} pour confirmer : ").strip()
-    if confirm != "DÉSINSTALLER":
+    confirm = input(f"\n  Tape {C}DESINSTALLER{R} pour confirmer : ").strip()
+    if confirm != "DESINSTALLER":
         print("  Annulé.")
         return
 
