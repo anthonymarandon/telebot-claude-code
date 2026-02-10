@@ -4,6 +4,11 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.7] - 2026-02-10
+
+### Fixed
+- Messages de configuration manquante proposent deux options (telebot config + Menu Paramètres) au lieu d'une seule
+
 ## [1.8.6] - 2026-02-10
 
 ### Added

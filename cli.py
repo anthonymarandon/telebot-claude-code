@@ -116,7 +116,9 @@ def do_start(foreground=False):
         return
 
     if not os.path.exists(ENV_FILE):
-        print("Fichier .env manquant. Lance : telebot config")
+        print("Fichier .env manquant.")
+        print("  - telebot config")
+        print("  - Menu > Paramètres > Configurer (token / user ID)")
         return
 
     env = _read_env()
@@ -129,7 +131,8 @@ def do_start(foreground=False):
         if not user_id:
             missing.append("User ID")
         print(f"Configuration incomplète ({', '.join(missing)}).")
-        print("Lance : telebot config")
+        print("  - telebot config")
+        print("  - Menu > Paramètres > Configurer (token / user ID)")
         return
 
     if foreground:
