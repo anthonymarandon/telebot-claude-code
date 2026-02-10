@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.6] - 2026-02-10
+
+### Added
+- Badges shields.io dans le README (version, licence, Python, plateforme, auteur)
+- Étape de vérification des badges README dans le skill de commit
+
 ## [1.8.5] - 2026-02-10
 
 ### Removed

@@ -31,7 +31,21 @@ Tu es un agent de gestion de versions. Quand l'utilisateur invoque ce skill, ex�
 
 Présente ton analyse à l'utilisateur avec la version proposée et attends sa validation avant de continuer.
 
-## Étape 4 — Mettre à jour le CHANGELOG.md
+## Étape 4 — Vérifier les badges du README.md
+
+Vérifie que les badges en haut de `README.md` sont cohérents avec l'état actuel du projet :
+
+| Badge | Source | Quand mettre à jour |
+|---|---|---|
+| **Version** | Dynamique (shields.io/github) | Jamais — se met à jour automatiquement via le tag git |
+| **License** | Statique | Si la licence change |
+| **Python** | Statique | Si la version Python minimale change |
+| **Platform** | Statique | Si les plateformes supportées changent |
+| **Author** | Statique | Si l'auteur change |
+
+Si un changement dans le diff impacte l'un de ces éléments (ex: version Python minimale dans `requirements.txt`, licence, plateformes supportées), mets à jour le badge correspondant dans `README.md` et inclus le fichier dans le commit.
+
+## Étape 5 — Mettre à jour le CHANGELOG.md
 
 Ajoute une nouvelle entrée **en haut** de la section des versions dans `CHANGELOG.md` avec ce format :
 
@@ -48,7 +62,7 @@ Catégories possibles :
 - **Fixed** : correction de bug
 - **Removed** : suppression de fonctionnalité
 
-## Étape 5 — Créer le commit
+## Étape 6 — Créer le commit
 
 - Stage les fichiers pertinents (y compris `CHANGELOG.md`). Ne jamais utiliser `git add -A` ou `git add .`. Ajouter les fichiers par nom.
 - Ne jamais inclure de fichiers sensibles (`.env`, credentials, etc.).
@@ -66,7 +80,7 @@ Où **Type** est un des suivants : `fix`, `feat`, `refactor`, `docs`, `chore`, `
 
 - Vérifie avec `git status` que le commit a réussi.
 
-## Étape 6 — Créer le tag git
+## Étape 7 — Créer le tag git
 
 - Crée un tag git annoté : `git tag -a vX.Y.Z -m "vX.Y.Z"`
 - Pousse le tag sur le remote : `git push origin vX.Y.Z`

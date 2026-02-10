@@ -1,5 +1,11 @@
 # Telebot
 
+![Version](https://img.shields.io/github/v/tag/anthonymarandon/telebot-claude-code?label=version&sort=semver)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(WSL)-lightgrey)
+![Author](https://img.shields.io/badge/by-Anthony%20Marandon-orange)
+
 Pilotez [Claude Code](https://docs.anthropic.com/en/docs/claude-code) à distance depuis Telegram.
 
 Envoyez des prompts, recevez les réponses en streaming, approuvez les dialogues de permission — le tout depuis votre téléphone.
