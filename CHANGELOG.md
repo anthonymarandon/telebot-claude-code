@@ -4,6 +4,14 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.2] - 2026-02-10
+
+### Fixed
+- Le bot refuse de démarrer si le token ou le user ID sont manquants dans le `.env`, avec message d'erreur précis
+
+### Changed
+- README réécrit : prérequis détaillés par plateforme, Node.js ajouté, section "Comment ça fonctionne"
+
 ## [1.8.1] - 2026-02-10
 
 ### Fixed

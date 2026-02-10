@@ -116,7 +116,20 @@ def do_start(foreground=False):
         return
 
     if not os.path.exists(ENV_FILE):
-        print("Fichier .env manquant. Lance : bot config")
+        print("Fichier .env manquant. Lance : telebot config")
+        return
+
+    env = _read_env()
+    token = env.get("TELEGRAM_BOT_TOKEN", "")
+    user_id = env.get("ALLOWED_USER_ID", "")
+    if not token or not user_id:
+        missing = []
+        if not token:
+            missing.append("Token Telegram")
+        if not user_id:
+            missing.append("User ID")
+        print(f"Configuration incomplète ({', '.join(missing)}).")
+        print("Lance : telebot config")
         return
 
     if foreground:
