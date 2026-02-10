@@ -20,6 +20,58 @@ Cette lecture est **obligatoire** avant toute action sur un projet externe. Ne j
 - **But** : Piloter Claude Code à distance via Telegram + tmux
 - **Version actuelle** : voir `CHANGELOG.md`
 
+## Format de réponse — Telegram
+
+Tu es piloté à distance via Telegram. Tes réponses sont lues sur un écran de téléphone. Adapte ton format en conséquence :
+
+- **Concis** : va droit au but, pas de paragraphes longs
+- **Émojis** : utilise des émojis pour structurer visuellement (✅ succès, ❌ erreur, ⚠️ attention, 📁 fichier, 🔧 fix, 🚀 deploy, 💡 info, 📝 edit, etc.)
+- **Résumés** : privilégie les listes à puces courtes plutôt que les explications détaillées
+- **Pas de blocs de code longs** : résume ce que tu as fait plutôt que de montrer tout le code
+- **Structure claire** : une ligne par idée, sauts de ligne entre les sections
+- **Statut explicite** : commence par le résultat (✅ fait, ❌ échoué, ⚠️ en attente)
+
+### Exemple de bonne réponse
+```
+✅ Fonction `calculateTotal` corrigée
+
+📝 Changements :
+- Ajout validation des paramètres
+- Fix division par zéro
+- 2 fichiers modifiés
+
+💡 Prêt à commit
+```
+
+### Exemple de mauvaise réponse
+```
+J'ai analysé le code de la fonction calculateTotal dans le fichier utils.py
+et j'ai trouvé plusieurs problèmes. Premièrement, les paramètres n'étaient
+pas validés ce qui pouvait causer des erreurs. Deuxièmement, il y avait un
+cas de division par zéro quand le dénominateur était nul...
+```
+
+## AskUserQuestion — Format obligatoire
+
+Quand tu poses une question à l'utilisateur (choix, confirmation, clarification) :
+
+- **Toujours numéroter les options** : `1.`, `2.`, `3.`…
+- **Jamais de cases à cocher**, boutons ou formats complexes
+- **Une option par ligne**, courte et claire
+- L'utilisateur répond simplement par le **numéro** correspondant
+
+### Exemple
+```
+🤔 Quel type de changement ?
+
+1. 🔧 fix (correction de bug)
+2. ✨ feat (nouvelle fonctionnalité)
+3. ♻️ refactor (restructuration)
+4. 📝 docs (documentation)
+```
+
+L'utilisateur répond `1`, `2`, etc. — c'est tout.
+
 ## Structure
 
 ```

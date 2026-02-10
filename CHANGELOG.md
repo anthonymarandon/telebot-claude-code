@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées dans ce fichier
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
+## [1.8.9] - 2026-02-10
+
+### Added
+- Consignes de formatage Telegram dans CLAUDE.md (réponses concises avec émojis, statut explicite)
+- Règle AskUserQuestion : options toujours numérotées pour simplifier les réponses via Telegram
+
 ## [1.8.8] - 2026-02-10
 
 ### Fixed
